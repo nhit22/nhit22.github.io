@@ -18,6 +18,7 @@ const provider = new GoogleAuthProvider();
 
 let isAdmin = false, transactions = [], members = [], memberNotes = {}, formerMembers = [];
 let exemptMembers = ["김의수", "박소연", "정승희"];
+let accountText = "카카오뱅크 3333360366378 정승희";
 let duesMode = "monthly", txFilter = "all", draftPaid = {};
 
 const CATEGORIES = {
@@ -33,8 +34,17 @@ monthSelector.onchange = () => { loadDraftForMonth(); renderMembers(); };
 document.getElementById("yearSelector").onchange = () => renderMembers();
 
 window.copyAccount = () => {
-  navigator.clipboard.writeText("3333360366378");
-  alert("계좌번호 복사 완료: 카카오뱅크 3333360366378 정승희");
+  navigator.clipboard.writeText(accountText);
+  alert(`계좌정보 복사 완료:\n${accountText}`);
+};
+
+window.editAccountInfo = async () => {
+  const nextAcc = prompt("변경할 모임통장 계좌정보를 입력하세요\n(예: 카카오뱅크 3333000000000 홍길동)", accountText);
+  if (nextAcc === null) return;
+  const trimmed = nextAcc.trim();
+  if (!trimmed) return alert("계좌정보를 비워둘 수 없습니다.");
+  await setDoc(doc(db, "config", "settings"), { accountText: trimmed }, { merge: true });
+  alert("모임통장 계좌정보가 변경되었습니다.");
 };
 
 window.updateCategoryOptions = () => {
@@ -71,7 +81,12 @@ document.getElementById("loginBtn").onclick = () => signInWithPopup(auth, provid
 document.getElementById("logoutBtn").onclick = () => signOut(auth);
 
 onSnapshot(doc(db, "config", "settings"), (snap) => {
-  if (snap.exists() && snap.data().exemptMembers) exemptMembers = snap.data().exemptMembers;
+  if (snap.exists()) {
+    const data = snap.data();
+    if (data.exemptMembers) exemptMembers = data.exemptMembers;
+    if (data.accountText) accountText = data.accountText;
+  }
+  document.getElementById("accountDisplay").textContent = accountText;
   document.getElementById("exemptNamesText").textContent = exemptMembers.join(", ") || "없음";
   renderExemptUI();
   renderMembers();
@@ -99,7 +114,6 @@ onAuthStateChanged(auth, async (user) => {
   renderLedger(); renderMembers();
 });
 
-// 잔액 직접 수정
 window.editDirectBalance = async () => {
   const current = document.getElementById("totalBalance").textContent.replace(/[^0-9-]/g, "");
   const input = prompt("실제 모임통장 잔액(숫자만)을 입력하세요:", current);
@@ -119,7 +133,6 @@ window.editDirectBalance = async () => {
   alert(`잔액이 ${targetVal.toLocaleString()}원으로 맞춰졌습니다.`);
 };
 
-// 장부 구독
 onSnapshot(query(collection(db, "transactions"), orderBy("date", "desc")), (snap) => {
   transactions = snap.docs.map(d => ({ id: d.id, ...d.data() }));
   renderLedger();
@@ -162,7 +175,6 @@ document.getElementById("addTxBtn").onclick = async () => {
 };
 window.deleteTx = async (id) => { if (confirm("이 내역을 삭제할까요?")) await deleteDoc(doc(db, "transactions", id)); };
 
-// 멤버 구독
 onSnapshot(query(collection(db, "members"), orderBy("name", "asc")), (snap) => {
   members = snap.docs.map(d => ({ id: d.id, ...d.data() }));
   loadDraftForMonth();
@@ -279,7 +291,6 @@ document.getElementById("saveMonthlyDuesBtn").onclick = async () => {
   }
 };
 
-// 회장단 콤보박스 UI
 function renderExemptUI() {
   document.getElementById("exemptChipsArea").innerHTML = exemptMembers.map(name =>
     `<span class="exempt-chip">${name} <button onclick="removeExempt('${name}')">×</button></span>`
@@ -311,7 +322,6 @@ document.getElementById("addMemberBtn").onclick = async () => {
 
 window.deleteMember = async (id, name) => { if (confirm(`'${name}' 멤버를 삭제할까요?`)) await deleteDoc(doc(db, "members", id)); };
 
-// 총무 전용 특이사항 & 탈퇴 멤버
 let unsubNotes = null, unsubFormer = null;
 function subscribeSecretData() {
   if (unsubNotes) unsubNotes();
@@ -365,7 +375,6 @@ window.saveNote = async (id) => {
   alert("특이사항이 저장되었습니다.");
 };
 
-// 기존 데이터 리셋 후 최신 데이터 세팅 (4,213,862원 정확 일치 + 염동환·이동은만 특이사항)
 document.getElementById("resetAndSeedBtn").onclick = async () => {
   if (!confirm("기존 DB 데이터를 모두 지우고 2026년 최신 장부(잔액 4,213,862원)와 특이사항으로 깔끔하게 재세팅할까요?")) return;
 
@@ -377,7 +386,10 @@ document.getElementById("resetAndSeedBtn").onclick = async () => {
   }
 
   const batch = writeBatch(db);
-  batch.set(doc(db, "config", "settings"), { exemptMembers: ["김의수", "박소연", "정승희"] });
+  batch.set(doc(db, "config", "settings"), {
+    exemptMembers: ["김의수", "박소연", "정승희"],
+    accountText: "카카오뱅크 3333360366378 정승희"
+  });
 
   const initTxs = [
     { date: "2026-01-01", type: "in", category: "이월금", amount: 5549119, description: "2025년도 잔여분 이월" },
