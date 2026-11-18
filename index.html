@@ -20,8 +20,11 @@
 
   <div class="hero-card">
     <div class="account-row">
-      <span class="account-text">카카오뱅크 3333360366378 정승희</span>
-      <button class="copy-pill" onclick="copyAccount()">계좌복사</button>
+      <span class="account-text" id="accountDisplay">카카오뱅크 3333360366378 정승희</span>
+      <div style="display:flex; gap:6px; flex-shrink:0;">
+        <button class="copy-pill admin-only" onclick="editAccountInfo()">계좌수정</button>
+        <button class="copy-pill" onclick="copyAccount()">계좌복사</button>
+      </div>
     </div>
     <div class="balance-label">현재 모임통장 잔액</div>
     <div class="balance-row">
