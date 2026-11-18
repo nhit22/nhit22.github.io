@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>nhit22 동기회비 장부</title>
+  <style>
+    * { box-sizing: border-box; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
+    body { max-width: 640px; margin: 0 auto; padding: 20px; background: #f8f9fa; color: #212529; }
+    header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+    h1 { font-size: 1.4rem; margin: 0; }
+    button { cursor: pointer; border: none; border-radius: 8px; padding: 8px 14px; font-size: 0.9rem; font-weight: 600; }
+    .btn-primary { background: #2563eb; color: white; }
+    .btn-outline { background: white; border: 1px solid #d1d5db; color: #374151; }
+    .btn-danger { background: #ef4444; color: white; padding: 4px 8px; font-size: 0.8rem; }
+    
+    .card { background: white; border-radius: 12px; padding: 20px; box-shadow: 0 1px 3px rgba(0,0,0,0.08); margin-bottom: 16px; }
+    .balance-label { font-size: 0.9rem; color: #6b7280; }
+    .balance-amount { font-size: 2rem; font-weight: 700; color: #111827; margin-top: 4px; }
+    
+    .admin-panel { display: none; border: 2px solid #2563eb; }
+    .admin-panel.active { display: block; }
+    .form-row { display: flex; gap: 8px; margin-bottom: 10px; flex-wrap: wrap; }
+    input, select { padding: 8px 10px; border: 1px solid #d1d5db; border-radius: 6px; font-size: 0.9rem; }
+    input[type="text"], input[type="number"] { flex: 1; min-width: 120px; }
+    
+    table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+    th, td { padding: 12px 8px; text-align: left; border-bottom: 1px solid #e5e7eb; font-size: 0.92rem; }
+    th { color: #6b7280; font-weight: 600; }
+    .amount-in { color: #2563eb; font-weight: 600; text-align: right; }
+    .amount-out { color: #ef4444; font-weight: 600; text-align: right; }
+    .uid-box { background: #f3f4f6; padding: 8px; border-radius: 6px; font-family: monospace; font-size: 0.8rem; word-break: break-all; margin: 8px 0; }
+  </style>
+</head>
+<body>
+
+  <header>
+    <h1>💰 nhit22 동기회비 장부</h1>
+    <div>
+      <button id="loginBtn" class="btn-outline">총무 로그인</button>
+      <button id="logoutBtn" class="btn-outline" style="display:none;">로그아웃</button>
+    </div>
+  </header>
+
+  <!-- 현재 잔액 요약 -->
+  <div class="card">
+    <div class="balance-label">현재 총 잔액</div>
+    <div class="balance-amount" id="totalBalance">0원</div>
+  </div>
+
+  <!-- 로그인한 사용자 정보 (일반 로그인 시 본인 UID 확인용) -->
+  <div id="userInfoCard" class="card" style="display:none;">
+    <div style="font-size:0.9rem; font-weight:600;">로그인 계정: <span id="userEmail"></span></div>
+    <div style="font-size:0.8rem; color:#6b7280; margin-top:4px;">내 고유 UID (차기 총무 위임 시 구 총무에게 전달):</div>
+    <div class="uid-box" id="userUid"></div>
+  </div>
+
+  <!-- 총무 전용 관리 패널 -->
+  <div id="adminPanel" class="card admin-panel">
+    <h3 style="margin-top:0; font-size:1.05rem;">🛠️ 총무 전용: 내역 추가</h3>
+    <div class="form-row">
+      <input type="date" id="txDate">
+      <select id="txType">
+        <option value="in">입금 (+)</option>
+        <option value="out">출금 (-)</option>
+      </select>
+      <input type="number" id="txAmount" placeholder="금액 (숫자만)">
+    </div>
+    <div class="form-row">
+      <input type="text" id="txDesc" placeholder="내용 (예: 홍길동 11월 회비 / 4분기 모임 식대)">
+      <button id="addTxBtn" class="btn-primary">등록</button>
+    </div>
+
+    <hr style="border:0; border-top:1px solid #e5e7eb; margin:16px 0;">
+    <h3 style="margin-top:0; font-size:1.05rem;">👑 차기 총무 권한 위임</h3>
+    <p style="font-size:0.82rem; color:#6b7280; margin:4px 0 8px;">
+      차기 총무가 먼저 이 페이지에서 [총무 로그인]을 누른 뒤 화면에 뜨는 UID를 전달받아 아래에 입력하세요.
+    </p>
+    <div class="form-row">
+      <input type="text" id="nextAdminUid" placeholder="차기 총무 UID 붙여넣기">
+      <button id="transferAdminBtn" class="btn-outline">권한 위임 (교체)</button>
+    </div>
+  </div>
+
+  <!-- 입출금 내역 리스트 -->
+  <div class="card">
+    <h3 style="margin-top:0; font-size:1.05rem;">📋 입출금 내역</h3>
+    <table>
+      <thead>
+        <tr>
+          <th>날짜</th>
+          <th>내용</th>
+          <th style="text-align:right;">금액</th>
+          <th class="admin-col" style="display:none; width:50px;">관리</th>
+        </tr>
+      </thead>
+      <tbody id="txList">
+        <tr><td colspan="4" style="text-align:center; color:#9ca3af;">불러오는 중...</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+    import { getAuth, GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+    import { getFirestore, collection, doc, getDoc, setDoc, addDoc, deleteDoc, onSnapshot, query, orderBy, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyA1H38nzMRt3XPFWffv1_ryfn6Ot0xOSv0",
+      authDomain: "nhit22.firebaseapp.com",
+      projectId: "nhit22",
+      storageBucket: "nhit22.firebasestorage.app",
+      messagingSenderId: "206103449651",
+      appId: "1:206103449651:web:96d0f0674d7240728d5346"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const db = getFirestore(app);
+    const provider = new GoogleAuthProvider();
+
+    let isAdmin = false;
+    document.getElementById("txDate").valueAsDate = new Date();
+
+    // 1. 로그인 / 로그아웃 버튼 이벤트
+    document.getElementById("loginBtn").onclick = () => signInWithPopup(auth, provider);
+    document.getElementById("logoutBtn").onclick = () => signOut(auth);
+
+    // 2. 로그인 상태 감지 및 총무 권한 확인
+    onAuthStateChanged(auth, async (user) => {
+      const loginBtn = document.getElementById("loginBtn");
+      const logoutBtn = document.getElementById("logoutBtn");
+      const userInfoCard = document.getElementById("userInfoCard");
+      const adminPanel = document.getElementById("adminPanel");
+
+      if (user) {
+        loginBtn.style.display = "none";
+        logoutBtn.style.display = "inline-block";
+        userInfoCard.style.display = "block";
+        document.getElementById("userEmail").textContent = user.email;
+        document.getElementById("userUid").textContent = user.uid;
+
+        // config/admin 문서에서 현재 총무 UID 목록 조회
+        const adminSnap = await getDoc(doc(db, "config", "admin"));
+        const adminUids = adminSnap.exists() ? (adminSnap.data().uids || []) : [];
+        isAdmin = adminUids.includes(user.uid);
+
+        if (isAdmin) {
+          adminPanel.classList.add("active");
+        } else {
+          adminPanel.classList.remove("active");
+        }
+      } else {
+        loginBtn.style.display = "inline-block";
+        logoutBtn.style.display = "none";
+        userInfoCard.style.display = "none";
+        adminPanel.classList.remove("active");
+        isAdmin = false;
+      }
+      renderTable(); // 권한 변경에 맞춰 삭제 버튼 표시 갱신
+    });
+
+    // 3. 실시간 회비 내역 구독
+    let transactions = [];
+    const q = query(collection(db, "transactions"), orderBy("date", "desc"));
+    onSnapshot(q, (snapshot) => {
+      transactions = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
+      renderTable();
+    });
+
+    function renderTable() {
+      const tbody = document.getElementById("txList");
+      const adminCols = document.querySelectorAll(".admin-col");
+      adminCols.forEach(col => col.style.display = isAdmin ? "table-cell" : "none");
+
+      let balance = 0;
+      transactions.forEach(tx => {
+        balance += (tx.type === "in" ? Number(tx.amount) : -Number(tx.amount));
+      });
+      document.getElementById("totalBalance").textContent = balance.toLocaleString() + "원";
+
+      if (transactions.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="4" style="text-align:center; color:#9ca3af;">등록된 내역이 없습니다.</td></tr>`;
+        return;
+      }
+
+      tbody.innerHTML = transactions.map(tx => `
+        <tr>
+          <td>${tx.date}</td>
+          <td>${tx.description}</td>
+          <td class="${tx.type === 'in' ? 'amount-in' : 'amount-out'}">
+            ${tx.type === 'in' ? '+' : '-'}${Number(tx.amount).toLocaleString()}원
+          </td>
+          <td class="admin-col" style="display:${isAdmin ? 'table-cell' : 'none'};">
+            <button class="btn-danger" onclick="deleteTx('${tx.id}')">삭제</button>
+          </td>
+        </tr>
+      `).join("");
+    }
+
+    // 4. 내역 추가
+    document.getElementById("addTxBtn").onclick = async () => {
+      const date = document.getElementById("txDate").value;
+      const type = document.getElementById("txType").value;
+      const amount = Number(document.getElementById("txAmount").value);
+      const description = document.getElementById("txDesc").value.trim();
+
+      if (!date || !amount || !description) return alert("날짜, 금액, 내용을 모두 입력하세요.");
+
+      await addDoc(collection(db, "transactions"), {
+        date, type, amount, description, createdAt: serverTimestamp()
+      });
+      document.getElementById("txAmount").value = "";
+      document.getElementById("txDesc").value = "";
+    };
+
+    // 5. 내역 삭제
+    window.deleteTx = async (id) => {
+      if (confirm("이 내역을 삭제할까요?")) {
+        await deleteDoc(doc(db, "transactions", id));
+      }
+    };
+
+    // 6. 차기 총무 권한 위임
+    document.getElementById("transferAdminBtn").onclick = async () => {
+      const nextUid = document.getElementById("nextAdminUid").value.trim();
+      if (!nextUid) return alert("차기 총무의 UID를 입력하세요.");
+      if (!confirm("정말 차기 총무에게 권한을 넘기시겠습니까? 실행 즉시 본인의 수정 권한은 사라집니다.")) return;
+
+      await setDoc(doc(db, "config", "admin"), { uids: [nextUid] });
+      alert("총무 권한이 성공적으로 위임되었습니다.");
+      location.reload();
+    };
+  </script>
+</body>
+</html>
