@@ -440,7 +440,7 @@ if ($("resetAndSeedBtn")) $("resetAndSeedBtn").onclick = async () => {
       }
     });
 
-    batch.set(doc(db, "former_members"), {
+    batch.set(doc(collection(db, "former_members")), {
       name: "이동은",
       note: "2025년 12월 정기회비 납부 완료, 2025년 12월 추가 회비 200,000원 미납 상태에서 2026년 1월 탈회. 추후 재가입 희망 시 탈회 이후 미납된 회비 일체 소급 납부 필요.",
       createdAt: serverTimestamp()
