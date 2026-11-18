@@ -4,63 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>NHIT 22기 동기회비</title>
-  <style>
-    :root {
-      --bg: #F2F4F7; --card: #FFFFFF; --blue: #0381FE; --blue-light: #E8F3FF;
-      --text: #010102; --sub: #5C5F66; --muted: #8E9299; --line: #E6E8EC; --red: #E53935;
-    }
-    * { box-sizing: border-box; font-family: -apple-system, BlinkMacSystemFont, "SamsungOne", "Pretendard", sans-serif; }
-    body { max-width: 580px; margin: 0 auto; padding: 20px 16px 60px; background: var(--bg); color: var(--text); line-height: 1.5; }
-    header { display: flex; justify-content: space-between; align-items: center; padding: 6px 4px 18px; }
-    header h1 { font-size: 1.5rem; font-weight: 700; margin: 0; letter-spacing: -0.5px; }
-    header p { font-size: 0.82rem; color: var(--sub); margin: 2px 0 0; }
-    button { cursor: pointer; border: none; border-radius: 20px; padding: 9px 15px; font-size: 0.86rem; font-weight: 600; transition: 0.15s; }
-    button:active { transform: scale(0.97); }
-    .btn-primary { background: var(--blue); color: #fff; }
-    .btn-soft { background: var(--blue-light); color: var(--blue); }
-    .btn-ghost { background: #fff; color: var(--text); border: 1px solid var(--line); }
-    .btn-danger { background: #FFEBEE; color: var(--red); padding: 5px 11px; font-size: 0.78rem; }
-
-    .hero-card, .one-card { background: var(--card); border-radius: 26px; padding: 22px; margin-bottom: 14px; box-shadow: 0 2px 10px rgba(0,0,0,0.03); }
-    .account-row { display: flex; justify-content: space-between; align-items: center; background: var(--bg); padding: 10px 14px; border-radius: 16px; margin-bottom: 16px; font-size: 0.84rem; font-weight: 600; color: var(--sub); }
-    .copy-pill { background: #fff; color: var(--blue); padding: 5px 12px; font-size: 0.78rem; border-radius: 12px; box-shadow: 0 1px 3px rgba(0,0,0,0.06); }
-    .balance-value { font-size: 2.1rem; font-weight: 800; letter-spacing: -0.8px; margin: 2px 0 14px; }
-    .summary-chips { display: flex; gap: 8px; flex-wrap: wrap; }
-    .chip { background: var(--bg); padding: 6px 12px; border-radius: 12px; font-size: 0.79rem; color: var(--sub); font-weight: 600; }
-    .chip span { color: var(--blue); font-weight: 700; }
-
-    .segment-tabs { display: flex; background: #E4E7EC; padding: 4px; border-radius: 22px; margin-bottom: 16px; }
-    .segment-btn { flex: 1; background: transparent; color: var(--sub); padding: 10px 6px; border-radius: 18px; font-size: 0.88rem; }
-    .segment-btn.active { background: #fff; color: var(--text); box-shadow: 0 2px 6px rgba(0,0,0,0.06); }
-    .tab-pane { display: none; }
-    .tab-pane.active { display: block; }
-
-    .section-title { font-size: 1rem; font-weight: 700; margin: 0 0 12px; }
-    .form-row { display: flex; gap: 8px; margin-bottom: 10px; flex-wrap: wrap; }
-    input, select { padding: 11px 13px; border: 1px solid var(--line); border-radius: 14px; font-size: 0.88rem; background: #FAFAFB; outline: none; }
-    input:focus, select:focus { border-color: var(--blue); background: #fff; }
-    input[type="text"], input[type="number"] { flex: 1; min-width: 110px; }
-
-    .list-item { display: flex; justify-content: space-between; align-items: center; padding: 13px 0; border-bottom: 1px solid var(--line); }
-    .list-item:last-child { border-bottom: none; padding-bottom: 0; }
-    .list-item:first-child { padding-top: 0; }
-    .tx-title { font-size: 0.93rem; font-weight: 600; display: block; }
-    .tx-date { font-size: 0.77rem; color: var(--muted); }
-    .tx-amount-in { color: var(--blue); font-weight: 700; font-size: 0.95rem; }
-    .tx-amount-out { color: var(--text); font-weight: 700; font-size: 0.95rem; }
-
-    .badge { padding: 4px 10px; border-radius: 12px; font-size: 0.77rem; font-weight: 700; }
-    .badge-paid { background: var(--blue-light); color: var(--blue); }
-    .badge-unpaid { background: #FFEBEE; color: var(--red); }
-    .badge-exempt { background: #F0F2F5; color: var(--sub); }
-    .warn-tag { background: #FFF3E0; color: #E65100; font-size: 0.73rem; font-weight: 700; padding: 2px 7px; border-radius: 8px; }
-    input[type="checkbox"].one-check { width: 23px; height: 23px; accent-color: var(--blue); cursor: pointer; }
-    .admin-only { display: none; }
-    .admin-border { border: 1.5px solid var(--blue); }
-    .uid-box { background: var(--bg); padding: 8px 12px; border-radius: 12px; font-family: monospace; font-size: 0.75rem; color: var(--sub); word-break: break-all; margin-top: 8px; }
-    .note-block { padding: 13px 0; border-bottom: 1px solid var(--line); }
-    .note-block:last-child { border-bottom: none; }
-  </style>
+  <link rel="stylesheet" href="./style.css">
 </head>
 <body>
   <header>
@@ -68,7 +12,7 @@
       <h1>NHIT 22기 동기회</h1>
       <p>매월 21일 정기회비 20,000원</p>
     </div>
-    <div>
+    <div class="header-actions">
       <button id="loginBtn" class="btn-ghost">총무 로그인</button>
       <button id="logoutBtn" class="btn-ghost" style="display:none;">로그아웃</button>
     </div>
@@ -76,98 +20,143 @@
 
   <div class="hero-card">
     <div class="account-row">
-      <span>카카오뱅크 3333360366378 정승희</span>
+      <span class="account-text">카카오뱅크 3333360366378 정승희</span>
       <button class="copy-pill" onclick="copyAccount()">계좌복사</button>
     </div>
-    <div style="font-size:0.84rem; color:var(--sub);">현재 모임통장 잔액</div>
-    <div class="balance-value" id="totalBalance">0원</div>
+    <div class="balance-label">현재 모임통장 잔액</div>
+    <div class="balance-row">
+      <div class="balance-value" id="totalBalance">0원</div>
+      <button id="editBalanceBtn" class="btn-soft admin-only" onclick="editDirectBalance()">잔액수정</button>
+    </div>
     <div class="summary-chips">
       <div class="chip" id="monthStatusChip">납부현황 불러오는 중...</div>
       <div class="chip">회장단 면제: <span id="exemptNamesText">김의수, 박소연, 정승희</span></div>
     </div>
   </div>
 
-  <div id="userInfoCard" class="one-card" style="display:none; padding:16px 20px;">
-    <div style="display:flex; justify-content:space-between; align-items:center;">
-      <span style="font-size:0.85rem; font-weight:600;" id="userEmail"></span>
+  <div id="userInfoCard" class="one-card compact-card" style="display:none;">
+    <div class="row-between">
+      <span id="userEmail" class="bold-text"></span>
       <span id="roleBadge" class="badge badge-exempt">일반회원</span>
     </div>
     <div class="uid-box" id="userUid"></div>
   </div>
 
   <div class="segment-tabs">
-    <button class="segment-btn active" onclick="switchTab('dues', this)">월별 납부현황</button>
+    <button class="segment-btn active" onclick="switchTab('dues', this)">납부현황</button>
     <button class="segment-btn" onclick="switchTab('ledger', this)">입출금 장부</button>
     <button class="segment-btn admin-only" onclick="switchTab('notes', this)">특이사항(총무)</button>
   </div>
 
+  <!-- [탭 1] 월별 / 연별 납부현황 -->
   <div id="tab-dues" class="tab-pane active">
     <div class="one-card">
-      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:14px; flex-wrap:wrap; gap:8px;">
-        <input type="month" id="monthSelector" style="font-weight:700;">
-        <div class="admin-only" style="gap:6px;">
-          <button class="btn-soft" onclick="bulkCheck(true)">전체 일괄 체크</button>
-          <button class="btn-ghost" onclick="bulkCheck(false)">일괄 해제</button>
+      <div class="sub-segment">
+        <button id="viewMonthlyBtn" class="sub-seg-btn active" onclick="setDuesMode('monthly')">월별 보기</button>
+        <button id="viewYearlyBtn" class="sub-seg-btn" onclick="setDuesMode('yearly')">연별 보기</button>
+      </div>
+
+      <!-- 월별 보기 컨트롤 -->
+      <div id="monthlyControls" class="control-bar">
+        <input type="month" id="monthSelector">
+        <div class="btn-group admin-only">
+          <button class="btn-soft" onclick="localBulkCheck(true)">전체체크</button>
+          <button class="btn-ghost" onclick="localBulkCheck(false)">전체해제</button>
         </div>
       </div>
-      <div id="memberDuesList"><div style="text-align:center; color:var(--muted); padding:20px 0;">불러오는 중...</div></div>
+
+      <!-- 연별 보기 컨트롤 -->
+      <div id="yearlyControls" class="control-bar" style="display:none;">
+        <select id="yearSelector">
+          <option value="2026" selected>2026년 전체 현황</option>
+          <option value="2025">2025년 전체 현황</option>
+          <option value="2027">2027년 전체 현황</option>
+        </select>
+        <span class="muted-text">21일 기준 미납/예정 구분</span>
+      </div>
+
+      <div id="memberDuesList"><div class="empty-msg">불러오는 중...</div></div>
+
+      <!-- 월별 납부 확정 버튼 -->
+      <div id="saveDuesBar" class="admin-only" style="margin-top:16px;">
+        <button id="saveMonthlyDuesBtn" class="btn-primary full-btn">납부 완료 저장</button>
+      </div>
     </div>
 
+    <!-- 총무 전용 설정 카드 -->
     <div class="one-card admin-only admin-border">
-      <div id="seedSection" style="margin-bottom:18px; padding-bottom:18px; border-bottom:1px solid var(--line);">
-        <div class="section-title">⚡ 초기 데이터 원클릭 세팅</div>
-        <p style="font-size:0.8rem; color:var(--sub); margin:0 0 10px;">동기 23명 명단, 2025년 이월금, 2026년 1~10월 납부현황, 경조사 지출, 특이사항을 한 번에 등록합니다.</p>
-        <button id="seedAllBtn" class="btn-primary" style="width:100%;">초기 데이터 한 번에 등록하기</button>
+      <div class="section-title">데이터 일괄 세팅 및 초기화</div>
+      <p class="help-text">기존 테스트 데이터를 정리하고 23명 명단, 2026년 장부(이자 41,243원 포함 잔액 4,213,862원), 염동환·이동은 특이사항을 정확히 세팅합니다.</p>
+      <button id="resetAndSeedBtn" class="btn-primary full-btn" style="margin-bottom:18px;">기존 데이터 리셋 후 최신 데이터 세팅</button>
+
+      <div class="section-title">회장단(회비 면제) 설정</div>
+      <div id="exemptChipsArea" class="chip-wrap" style="margin-bottom:10px;"></div>
+      <div class="form-row" style="margin-bottom:18px;">
+        <select id="exemptMemberSelect"></select>
+        <button id="addExemptBtn" class="btn-soft">면제추가</button>
       </div>
-      <div class="section-title">👑 회장단(회비 면제) 설정</div>
-      <div class="form-row" style="margin-bottom:16px;">
-        <input type="text" id="exemptInput" placeholder="예: 김의수, 박소연, 정승희">
-        <button id="saveExemptBtn" class="btn-soft">저장</button>
-      </div>
-      <div class="section-title">👥 동기 멤버 추가</div>
-      <div class="form-row" style="margin-bottom:16px;">
-        <input type="text" id="newMemberNames" placeholder="추가할 이름 (쉼표 구분)">
+
+      <div class="section-title">동기 멤버 추가</div>
+      <div class="form-row" style="margin-bottom:18px;">
+        <input type="text" id="newMemberNames" placeholder="이름 입력 (쉼표 구분 가능)">
         <button id="addMemberBtn" class="btn-soft">추가</button>
       </div>
-      <div class="section-title">🔑 차기 총무 권한 위임</div>
+
+      <div class="section-title">차기 총무 권한 위임</div>
       <div class="form-row" style="margin-bottom:0;">
-        <input type="text" id="nextAdminUid" placeholder="차기 총무 UID 붙여넣기">
-        <button id="transferAdminBtn" class="btn-ghost">권한 넘기기</button>
+        <input type="text" id="nextAdminUid" placeholder="차기 총무 UID 입력">
+        <button id="transferAdminBtn" class="btn-ghost">권한위임</button>
       </div>
     </div>
   </div>
 
+  <!-- [탭 2] 입출금 장부 -->
   <div id="tab-ledger" class="tab-pane">
     <div class="one-card admin-only admin-border">
       <div class="section-title">입출금 내역 추가</div>
       <div class="form-row">
         <input type="date" id="txDate">
-        <select id="txType"><option value="in">입금 (+)</option><option value="out">출금 (-)</option></select>
-        <input type="number" id="txAmount" placeholder="금액">
+        <select id="txType" onchange="updateCategoryOptions()">
+          <option value="in">입금 (+)</option>
+          <option value="out">출금 (-)</option>
+        </select>
+        <select id="txCategory"></select>
       </div>
       <div class="form-row" style="margin-bottom:0;">
-        <input type="text" id="txDesc" placeholder="내용 입력">
+        <input type="number" id="txAmount" placeholder="금액(원)">
+        <input type="text" id="txDesc" placeholder="대상자/상세 메모">
         <button id="addTxBtn" class="btn-primary">등록</button>
       </div>
     </div>
+
     <div class="one-card">
-      <div class="section-title">전체 거래 내역</div>
-      <div id="txList"><div style="text-align:center; color:var(--muted); padding:20px 0;">불러오는 중...</div></div>
+      <div class="summary-chips" style="margin-bottom:14px;">
+        <div class="chip">총 입금: <span id="totalInChip">0원</span></div>
+        <div class="chip">총 출금: <span id="totalOutChip" style="color:#E53935;">0원</span></div>
+      </div>
+      <div class="sub-segment" style="margin-bottom:14px;">
+        <button class="sub-seg-btn active" onclick="setTxFilter('all', this)">전체</button>
+        <button class="sub-seg-btn" onclick="setTxFilter('in', this)">입금만</button>
+        <button class="sub-seg-btn" onclick="setTxFilter('out', this)">출금만</button>
+      </div>
+      <div id="txList"><div class="empty-msg">불러오는 중...</div></div>
     </div>
   </div>
 
+  <!-- [탭 3] 총무 전용 특이사항 -->
   <div id="tab-notes" class="tab-pane">
     <div class="one-card admin-border">
-      <div class="section-title">🚪 탈퇴 / 비활동 멤버 관리 (총무 전용)</div>
+      <div class="section-title">탈퇴 / 비활동 멤버 관리 (총무 전용)</div>
       <div id="formerMembersList" style="margin-bottom:12px;"></div>
       <div class="form-row" style="margin-bottom:0;">
-        <input type="text" id="formerName" placeholder="이름" style="max-width:100px;">
+        <input type="text" id="formerName" placeholder="이름" style="max-width:95px;">
         <input type="text" id="formerNote" placeholder="탈회 시점 및 재가입 조건">
         <button id="addFormerBtn" class="btn-soft">기록</button>
       </div>
     </div>
+
     <div class="one-card">
-      <div class="section-title">🔒 멤버별 특이사항 메모 (총무 전용)</div>
+      <div class="section-title">멤버별 특이사항 (눌러서 전체 확인/수정)</div>
       <div id="secretNotesList"></div>
     </div>
   </div>
