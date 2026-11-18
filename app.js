@@ -16,6 +16,7 @@ const auth = getAuth(app);
 const db = getFirestore(app);
 const provider = new GoogleAuthProvider();
 
+const $ = (id) => document.getElementById(id);
 let isAdmin = false, transactions = [], members = [], memberNotes = {}, formerMembers = [];
 let exemptMembers = ["김의수", "박소연", "정승희"];
 let accountText = "카카오뱅크 3333360366378 정승희";
@@ -27,11 +28,13 @@ const CATEGORIES = {
 };
 
 const today = new Date();
-document.getElementById("txDate").valueAsDate = today;
-const monthSelector = document.getElementById("monthSelector");
-monthSelector.value = today.toISOString().slice(0, 7);
-monthSelector.onchange = () => { loadDraftForMonth(); renderMembers(); };
-document.getElementById("yearSelector").onchange = () => renderMembers();
+if ($("txDate")) $("txDate").valueAsDate = today;
+const monthSelector = $("monthSelector");
+if (monthSelector) {
+  monthSelector.value = today.toISOString().slice(0, 7);
+  monthSelector.onchange = () => { loadDraftForMonth(); renderMembers(); };
+}
+if ($("yearSelector")) $("yearSelector").onchange = () => renderMembers();
 
 window.copyAccount = () => {
   navigator.clipboard.writeText(accountText);
@@ -39,50 +42,49 @@ window.copyAccount = () => {
 };
 
 window.editAccountInfo = async () => {
-  const nextAcc = prompt("변경할 모임통장 계좌정보를 입력하세요\n(예: 카카오뱅크 3333000000000 홍길동)", accountText);
-  if (nextAcc === null) return;
-  const trimmed = nextAcc.trim();
-  if (!trimmed) return alert("계좌정보를 비워둘 수 없습니다.");
+  const nextAcc = prompt("변경할 모임통장 계좌정보를 입력하세요:", accountText);
+  if (!nextAcc || !nextAcc.trim()) return;
   try {
-    await setDoc(doc(db, "config", "settings"), { accountText: trimmed }, { merge: true });
-    alert("모임통장 계좌정보가 변경되었습니다.");
+    await setDoc(doc(db, "config", "settings"), { accountText: nextAcc.trim() }, { merge: true });
+    alert("계좌정보가 변경되었습니다.");
   } catch (e) {
-    alert("계좌 변경 권한 오류: Firebase 규칙에서 config 쓰기 허용이 필요합니다.");
+    alert("권한 오류: " + e.message);
   }
 };
 
 window.updateCategoryOptions = () => {
-  const type = document.getElementById("txType").value;
-  document.getElementById("txCategory").innerHTML = CATEGORIES[type].map(c => `<option value="${c}">${c}</option>`).join("");
+  if (!$("txType") || !$("txCategory")) return;
+  const type = $("txType").value;
+  $("txCategory").innerHTML = CATEGORIES[type].map(c => `<option value="${c}">${c}</option>`).join("");
 };
 updateCategoryOptions();
 
 window.switchTab = (tab, btn) => {
   document.querySelectorAll(".segment-btn").forEach(b => b.classList.remove("active"));
   document.querySelectorAll(".tab-pane").forEach(p => p.classList.remove("active"));
-  btn.classList.add("active");
-  document.getElementById("tab-" + tab).classList.add("active");
+  if (btn) btn.classList.add("active");
+  if ($("tab-" + tab)) $("tab-" + tab).classList.add("active");
 };
 
 window.setDuesMode = (mode) => {
   duesMode = mode;
-  document.getElementById("viewMonthlyBtn").classList.toggle("active", mode === "monthly");
-  document.getElementById("viewYearlyBtn").classList.toggle("active", mode === "yearly");
-  document.getElementById("monthlyControls").style.display = mode === "monthly" ? "flex" : "none";
-  document.getElementById("yearlyControls").style.display = mode === "yearly" ? "flex" : "none";
-  document.getElementById("saveDuesBar").style.display = (mode === "monthly" && isAdmin) ? "block" : "none";
+  if ($("viewMonthlyBtn")) $("viewMonthlyBtn").classList.toggle("active", mode === "monthly");
+  if ($("viewYearlyBtn")) $("viewYearlyBtn").classList.toggle("active", mode === "yearly");
+  if ($("monthlyControls")) $("monthlyControls").style.display = mode === "monthly" ? "flex" : "none";
+  if ($("yearlyControls")) $("yearlyControls").style.display = mode === "yearly" ? "flex" : "none";
+  if ($("saveDuesBar")) $("saveDuesBar").style.display = (mode === "monthly" && isAdmin) ? "block" : "none";
   renderMembers();
 };
 
 window.setTxFilter = (filter, btn) => {
   txFilter = filter;
   document.querySelectorAll("#tab-ledger .sub-seg-btn").forEach(b => b.classList.remove("active"));
-  btn.classList.add("active");
+  if (btn) btn.classList.add("active");
   renderLedger();
 };
 
-document.getElementById("loginBtn").onclick = () => signInWithPopup(auth, provider);
-document.getElementById("logoutBtn").onclick = () => signOut(auth);
+if ($("loginBtn")) $("loginBtn").onclick = () => signInWithPopup(auth, provider);
+if ($("logoutBtn")) $("logoutBtn").onclick = () => signOut(auth);
 
 onSnapshot(doc(db, "config", "settings"), (snap) => {
   if (snap.exists()) {
@@ -90,27 +92,31 @@ onSnapshot(doc(db, "config", "settings"), (snap) => {
     if (data.exemptMembers) exemptMembers = data.exemptMembers;
     if (data.accountText) accountText = data.accountText;
   }
-  const accEl = document.getElementById("accountDisplay");
-  if (accEl) accEl.textContent = accountText;
-  document.getElementById("exemptNamesText").textContent = exemptMembers.join(", ") || "없음";
+  if ($("accountDisplay")) $("accountDisplay").textContent = accountText;
+  if ($("exemptNamesText")) $("exemptNamesText").textContent = exemptMembers.join(", ") || "없음";
   renderExemptUI();
   renderMembers();
 });
 
 onAuthStateChanged(auth, async (user) => {
-  const loginBtn = document.getElementById("loginBtn"), logoutBtn = document.getElementById("logoutBtn");
-  const infoCard = document.getElementById("userInfoCard"), badge = document.getElementById("roleBadge");
   if (user) {
-    loginBtn.style.display = "none"; logoutBtn.style.display = "inline-block"; infoCard.style.display = "block";
-    document.getElementById("userEmail").textContent = user.email;
-    document.getElementById("userUid").textContent = user.uid;
+    if ($("loginBtn")) $("loginBtn").style.display = "none";
+    if ($("logoutBtn")) $("logoutBtn").style.display = "inline-block";
+    if ($("userInfoCard")) $("userInfoCard").style.display = "block";
+    if ($("userEmail")) $("userEmail").textContent = user.email;
+    if ($("userUid")) $("userUid").textContent = user.uid;
     const adminSnap = await getDoc(doc(db, "config", "admin"));
     isAdmin = adminSnap.exists() && (adminSnap.data().uids || []).includes(user.uid);
   } else {
-    loginBtn.style.display = "inline-block"; logoutBtn.style.display = "none"; infoCard.style.display = "none"; isAdmin = false;
+    if ($("loginBtn")) $("loginBtn").style.display = "inline-block";
+    if ($("logoutBtn")) $("logoutBtn").style.display = "none";
+    if ($("userInfoCard")) $("userInfoCard").style.display = "none";
+    isAdmin = false;
   }
-  badge.textContent = isAdmin ? "총무 모드" : "일반회원";
-  badge.className = isAdmin ? "badge badge-paid" : "badge badge-exempt";
+  if ($("roleBadge")) {
+    $("roleBadge").textContent = isAdmin ? "총무 모드" : "일반회원";
+    $("roleBadge").className = isAdmin ? "badge badge-paid" : "badge badge-exempt";
+  }
   document.querySelectorAll(".admin-only").forEach(el => {
     if (el.id === "saveDuesBar") el.style.display = (isAdmin && duesMode === "monthly") ? "block" : "none";
     else el.style.display = isAdmin ? (el.classList.contains("btn-group") ? "flex" : "block") : "none";
@@ -120,7 +126,7 @@ onAuthStateChanged(auth, async (user) => {
 });
 
 window.editDirectBalance = async () => {
-  const current = document.getElementById("totalBalance").textContent.replace(/[^0-9-]/g, "");
+  const current = ($("totalBalance")?.textContent || "0").replace(/[^0-9-]/g, "");
   const input = prompt("실제 모임통장 잔액(숫자만)을 입력하세요:", current);
   if (input === null) return;
   const targetVal = Number(input.replace(/,/g, ""));
@@ -150,12 +156,13 @@ function renderLedger() {
     if (t.type === "in") { bal += amt; totalIn += amt; }
     else { bal -= amt; totalOut += amt; }
   });
-  document.getElementById("totalBalance").textContent = bal.toLocaleString() + "원";
-  document.getElementById("totalInChip").textContent = totalIn.toLocaleString() + "원";
-  document.getElementById("totalOutChip").textContent = totalOut.toLocaleString() + "원";
+  if ($("totalBalance")) $("totalBalance").textContent = bal.toLocaleString() + "원";
+  if ($("totalInChip")) $("totalInChip").textContent = totalIn.toLocaleString() + "원";
+  if ($("totalOutChip")) $("totalOutChip").textContent = totalOut.toLocaleString() + "원";
 
   const filtered = transactions.filter(t => txFilter === "all" || t.type === txFilter);
-  const el = document.getElementById("txList");
+  const el = $("txList");
+  if (!el) return;
   if (!filtered.length) { el.innerHTML = `<div class="empty-msg">내역이 없습니다.</div>`; return; }
   el.innerHTML = filtered.map(t => `
     <div class="list-item">
@@ -170,13 +177,13 @@ function renderLedger() {
     </div>`).join("");
 }
 
-document.getElementById("addTxBtn").onclick = async () => {
-  const date = document.getElementById("txDate").value, type = document.getElementById("txType").value;
-  const category = document.getElementById("txCategory").value, amount = Number(document.getElementById("txAmount").value);
-  const description = document.getElementById("txDesc").value.trim() || category;
+if ($("addTxBtn")) $("addTxBtn").onclick = async () => {
+  const date = $("txDate").value, type = $("txType").value;
+  const category = $("txCategory")?.value || "", amount = Number($("txAmount").value);
+  const description = $("txDesc").value.trim() || category;
   if (!date || !amount) return alert("날짜와 금액을 입력하세요.");
   await addDoc(collection(db, "transactions"), { date, type, category, amount, description, createdAt: serverTimestamp() });
-  document.getElementById("txAmount").value = ""; document.getElementById("txDesc").value = "";
+  $("txAmount").value = ""; $("txDesc").value = "";
 };
 window.deleteTx = async (id) => { if (confirm("이 내역을 삭제할까요?")) await deleteDoc(doc(db, "transactions", id)); };
 
@@ -189,23 +196,24 @@ onSnapshot(query(collection(db, "members"), orderBy("name", "asc")), (snap) => {
 });
 
 function loadDraftForMonth() {
-  const mo = monthSelector.value;
+  const mo = monthSelector ? monthSelector.value : today.toISOString().slice(0, 7);
   draftPaid = {};
   members.forEach(m => { draftPaid[m.id] = !!(m.paidMonths && m.paidMonths[mo]); });
 }
 
 function isPastDue(ym) {
   const [y, m] = ym.split("-").map(Number);
-  const dueDate = new Date(y, m - 1, 21, 23, 59, 59);
-  return new Date() > dueDate;
+  return new Date() > new Date(y, m - 1, 21, 23, 59, 59);
 }
 
 function renderMembers() {
-  const mo = monthSelector.value, targetMembers = members.filter(m => !exemptMembers.includes(m.name));
+  const mo = monthSelector ? monthSelector.value : today.toISOString().slice(0, 7);
+  const targetMembers = members.filter(m => !exemptMembers.includes(m.name));
   const paidCount = targetMembers.filter(m => m.paidMonths && m.paidMonths[mo]).length;
-  document.getElementById("monthStatusChip").innerHTML = `${mo} 납부: <span>${paidCount}명</span> / 대상 ${targetMembers.length}명`;
+  if ($("monthStatusChip")) $("monthStatusChip").innerHTML = `${mo} 납부: <span>${paidCount}명</span> / 대상 ${targetMembers.length}명`;
 
-  const container = document.getElementById("memberDuesList");
+  const container = $("memberDuesList");
+  if (!container) return;
   if (!members.length) { container.innerHTML = `<div class="empty-msg">등록된 멤버가 없습니다.</div>`; return; }
 
   if (duesMode === "monthly") {
@@ -232,7 +240,7 @@ function renderMembers() {
         </div>`;
     }).join("");
   } else {
-    const yr = document.getElementById("yearSelector").value;
+    const yr = $("yearSelector")?.value || "2026";
     container.innerHTML = members.map((m, idx) => {
       const isEx = exemptMembers.includes(m.name);
       let paidCnt = 0, unpaidCnt = 0;
@@ -266,7 +274,7 @@ window.localBulkCheck = (val) => {
   renderMembers();
 };
 
-document.getElementById("saveMonthlyDuesBtn").onclick = async () => {
+if ($("saveMonthlyDuesBtn")) $("saveMonthlyDuesBtn").onclick = async () => {
   const mo = monthSelector.value;
   let newlyPaid = 0;
   const batch = writeBatch(db);
@@ -297,17 +305,17 @@ document.getElementById("saveMonthlyDuesBtn").onclick = async () => {
 };
 
 function renderExemptUI() {
-  document.getElementById("exemptChipsArea").innerHTML = exemptMembers.map(name =>
+  if ($("exemptChipsArea")) $("exemptChipsArea").innerHTML = exemptMembers.map(name =>
     `<span class="exempt-chip">${name} <button onclick="removeExempt('${name}')">×</button></span>`
   ).join("");
   const nonExempt = members.filter(m => !exemptMembers.includes(m.name));
-  document.getElementById("exemptMemberSelect").innerHTML = nonExempt.length
+  if ($("exemptMemberSelect")) $("exemptMemberSelect").innerHTML = nonExempt.length
     ? nonExempt.map(m => `<option value="${m.name}">${m.name}</option>`).join("")
     : `<option value="">선택 가능 멤버 없음</option>`;
 }
 
-document.getElementById("addExemptBtn").onclick = async () => {
-  const name = document.getElementById("exemptMemberSelect").value;
+if ($("addExemptBtn")) $("addExemptBtn").onclick = async () => {
+  const name = $("exemptMemberSelect").value;
   if (!name || exemptMembers.includes(name)) return;
   await setDoc(doc(db, "config", "settings"), { exemptMembers: [...exemptMembers, name] }, { merge: true });
 };
@@ -316,13 +324,13 @@ window.removeExempt = async (name) => {
   await setDoc(doc(db, "config", "settings"), { exemptMembers: exemptMembers.filter(n => n !== name) }, { merge: true });
 };
 
-document.getElementById("addMemberBtn").onclick = async () => {
-  const names = document.getElementById("newMemberNames").value.split(",").map(s => s.trim()).filter(Boolean);
+if ($("addMemberBtn")) $("addMemberBtn").onclick = async () => {
+  const names = $("newMemberNames").value.split(",").map(s => s.trim()).filter(Boolean);
   if (!names.length) return;
   const batch = writeBatch(db);
   names.forEach(name => batch.set(doc(collection(db, "members")), { name, paidMonths: {} }));
   await batch.commit();
-  document.getElementById("newMemberNames").value = "";
+  $("newMemberNames").value = "";
 };
 
 window.deleteMember = async (id, name) => { if (confirm(`'${name}' 멤버를 삭제할까요?`)) await deleteDoc(doc(db, "members", id)); };
@@ -340,7 +348,8 @@ function subscribeSecretData() {
 }
 
 function renderFormerMembers() {
-  const el = document.getElementById("formerMembersList");
+  const el = $("formerMembersList");
+  if (!el) return;
   el.innerHTML = formerMembers.length ? formerMembers.map(f => `
     <div class="list-item">
       <div><span class="bold-text">${f.name}</span> <span class="badge badge-note">탈회</span><div style="color:var(--sub); margin-top:4px;">${f.note}</div></div>
@@ -348,16 +357,18 @@ function renderFormerMembers() {
     </div>`).join("") : `<div class="muted-text">기록된 탈퇴 멤버가 없습니다.</div>`;
 }
 
-document.getElementById("addFormerBtn").onclick = async () => {
-  const name = document.getElementById("formerName").value.trim(), note = document.getElementById("formerNote").value.trim();
+if ($("addFormerBtn")) $("addFormerBtn").onclick = async () => {
+  const name = $("formerName").value.trim(), note = $("formerNote").value.trim();
   if (!name || !note) return alert("이름과 내용을 모두 입력하세요.");
   await addDoc(collection(db, "former_members"), { name, note, createdAt: serverTimestamp() });
-  document.getElementById("formerName").value = ""; document.getElementById("formerNote").value = "";
+  $("formerName").value = ""; $("formerNote").value = "";
 };
 window.deleteFormer = async (id) => { if (confirm("삭제할까요?")) await deleteDoc(doc(db, "former_members", id)); };
 
 function renderSecretNotes() {
-  document.getElementById("secretNotesList").innerHTML = members.map((m, idx) => {
+  const el = $("secretNotesList");
+  if (!el) return;
+  el.innerHTML = members.map((m, idx) => {
     const val = (memberNotes[m.id] || "").trim();
     const hasMemo = val.length > 0;
     return `
@@ -375,14 +386,13 @@ function renderSecretNotes() {
 }
 
 window.saveNote = async (id) => {
-  const text = document.getElementById("note-ta-" + id).value.trim();
+  const text = $("note-ta-" + id).value.trim();
   await setDoc(doc(db, "member_notes", id), { note: text, updatedAt: serverTimestamp() });
   alert("특이사항이 저장되었습니다.");
 };
 
-document.getElementById("resetAndSeedBtn").onclick = async () => {
+if ($("resetAndSeedBtn")) $("resetAndSeedBtn").onclick = async () => {
   if (!confirm("2026년 최신 장부(잔액 4,213,862원)와 23명 명단, 특이사항을 복구할까요?")) return;
-
   try {
     for (const colName of ["transactions", "members", "member_notes", "former_members"]) {
       const snap = await getDocs(collection(db, colName));
@@ -392,7 +402,6 @@ document.getElementById("resetAndSeedBtn").onclick = async () => {
         await delBatch.commit();
       }
     }
-
     const batch = writeBatch(db);
     const initTxs = [
       { date: "2026-01-01", type: "in", category: "이월금", amount: 5549119, description: "2025년도 잔여분 이월" },
@@ -444,10 +453,9 @@ document.getElementById("resetAndSeedBtn").onclick = async () => {
   }
 };
 
-document.getElementById("transferAdminBtn").onclick = async () => {
-  const nextUid = document.getElementById("nextAdminUid").value.trim();
+if ($("transferAdminBtn")) $("transferAdminBtn").onclick = async () => {
+  const nextUid = $("nextAdminUid").value.trim();
   if (!nextUid || !confirm("정말 차기 총무에게 권한을 위임할까요?")) return;
   await setDoc(doc(db, "config", "admin"), { uids: [nextUid] });
   alert("총무 권한이 위임되었습니다."); location.reload();
 };
-
