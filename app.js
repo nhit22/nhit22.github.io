@@ -43,8 +43,12 @@ window.editAccountInfo = async () => {
   if (nextAcc === null) return;
   const trimmed = nextAcc.trim();
   if (!trimmed) return alert("계좌정보를 비워둘 수 없습니다.");
-  await setDoc(doc(db, "config", "settings"), { accountText: trimmed }, { merge: true });
-  alert("모임통장 계좌정보가 변경되었습니다.");
+  try {
+    await setDoc(doc(db, "config", "settings"), { accountText: trimmed }, { merge: true });
+    alert("모임통장 계좌정보가 변경되었습니다.");
+  } catch (e) {
+    alert("계좌 변경 권한 오류: Firebase 규칙에서 config 쓰기 허용이 필요합니다.");
+  }
 };
 
 window.updateCategoryOptions = () => {
@@ -376,67 +380,19 @@ window.saveNote = async (id) => {
 };
 
 document.getElementById("resetAndSeedBtn").onclick = async () => {
-  if (!confirm("기존 DB 데이터를 모두 지우고 2026년 최신 장부(잔액 4,213,862원)와 특이사항으로 깔끔하게 재세팅할까요?")) return;
+  if (!confirm("2026년 최신 장부(잔액 4,213,862원)와 23명 명단, 특이사항을 복구할까요?")) return;
 
-  for (const colName of ["transactions", "members", "member_notes", "former_members"]) {
-    const snap = await getDocs(collection(db, colName));
-    const delBatch = writeBatch(db);
-    snap.docs.forEach(d => delBatch.delete(d.ref));
-    await delBatch.commit();
-  }
-
-  const batch = writeBatch(db);
-  batch.set(doc(db, "config", "settings"), {
-    exemptMembers: ["김의수", "박소연", "정승희"],
-    accountText: "카카오뱅크 3333360366378 정승희"
-  });
-
-  const initTxs = [
-    { date: "2026-01-01", type: "in", category: "이월금", amount: 5549119, description: "2025년도 잔여분 이월" },
-    { date: "2026-01-11", type: "out", category: "결혼", amount: 1000000, description: "박세아 결혼 지원금" },
-    { date: "2026-01-11", type: "out", category: "결혼", amount: 43000, description: "박세아 결혼 화환" },
-    { date: "2026-01-28", type: "out", category: "결혼", amount: 1000000, description: "봉한결 결혼 지원금" },
-    { date: "2026-01-28", type: "out", category: "결혼", amount: 44500, description: "봉한결 결혼 화환" },
-    { date: "2026-04-19", type: "out", category: "결혼", amount: 2000000, description: "이용희·한수빈 결혼 지원금 (2인)" },
-    { date: "2026-04-19", type: "out", category: "결혼", amount: 86000, description: "이용희·한수빈 결혼 화환" },
-    { date: "2026-05-18", type: "out", category: "출산", amount: 100000, description: "김유니 출산 선물" },
-    { date: "2026-05-23", type: "out", category: "결혼", amount: 1000000, description: "김민재 결혼 지원금" },
-    { date: "2026-05-23", type: "out", category: "결혼", amount: 43000, description: "김민재 결혼 화환" },
-    { date: "2026-10-31", type: "in", category: "정기회비", amount: 3940000, description: "2026년 1~10월 정기회비 합계 (박소연 반환 제외)" },
-    { date: "2026-11-18", type: "in", category: "은행이자", amount: 41243, description: "2026년 세이프박스(41,106원) 및 통장 이자 누적" }
-  ];
-  initTxs.forEach(t => batch.set(doc(collection(db, "transactions")), { ...t, createdAt: serverTimestamp() }));
-
-  const names = ["김명진","김민재","김유니","김의수","김재연","박세아","박소연","박주성","박지민","봉한결","손일우","신지은","염동환","이동현","이민희","이상규","이용희","이예지","이준명","임우섭","정승희","한수빈","한진"];
-  names.forEach(name => {
-    const mRef = doc(collection(db, "members"));
-    const paidMonths = {};
-    if (!["김의수", "박소연", "정승희"].includes(name)) {
-      const cnt = name === "김명진" ? 8 : (name === "박주성" ? 9 : 10);
-      for (let mo = 1; mo <= cnt; mo++) paidMonths[`2026-${String(mo).padStart(2, "0")}`] = true;
+  try {
+    for (const colName of ["transactions", "members", "member_notes", "former_members"]) {
+      const snap = await getDocs(collection(db, colName));
+      if (!snap.empty) {
+        const delBatch = writeBatch(db);
+        snap.docs.forEach(d => delBatch.delete(d.ref));
+        await delBatch.commit();
+      }
     }
-    batch.set(mRef, { name, paidMonths });
-    if (name === "염동환") {
-      batch.set(doc(db, "member_notes", mRef.id), {
-        note: "2025년 12월 추가 회비 200,000원 미납 → 추후 축의금 등 경조사 지원금 지급 시 200,000원 차감 후 지급하기로 합의함.",
-        updatedAt: serverTimestamp()
-      });
-    }
-  });
 
-  batch.set(doc(db, "former_members"), {
-    name: "이동은",
-    note: "2025년 12월 정기회비 납부 완료, 2025년 12월 추가 회비 200,000원 미납 상태에서 2026년 1월 탈회. 추후 재가입 희망 시 탈회 이후 미납된 회비 일체 소급 납부 필요.",
-    createdAt: serverTimestamp()
-  });
-
-  await batch.commit();
-  alert("최신 데이터(잔액 4,213,862원)로 완벽히 세팅되었습니다!");
-};
-
-document.getElementById("transferAdminBtn").onclick = async () => {
-  const nextUid = document.getElementById("nextAdminUid").value.trim();
-  if (!nextUid || !confirm("정말 차기 총무에게 권한을 위임할까요?")) return;
-  await setDoc(doc(db, "config", "admin"), { uids: [nextUid] });
-  alert("총무 권한이 위임되었습니다."); location.reload();
-};
+    const batch = writeBatch(db);
+    const initTxs = [
+      { date: "2026-01-01", type: "in", category: "이월금", amount: 5549119, description: "2025년도 잔여분 이월" },
+      { date: "2026-01-11", type: "
